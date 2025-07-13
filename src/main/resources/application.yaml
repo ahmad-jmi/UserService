@@ -2,13 +2,19 @@ server:
   port: 8081
 
 spring:
+  application:
+    name: USER-SERVICE
+  config:
+    import: configserver:http://localhost:8085
+
   datasource:
     url: jdbc:mysql://localhost:3306/microservices
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
-  application:
-    name: USER-SERVICE
+
+#  profiles:
+#    active: prod
 
   jpa:
     hibernate:
@@ -18,10 +24,40 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
-eureka:
-  instance:
-    prefer-ip-address: true
-  client:
-    fetch-registry: true
-    service-url:
-      defaultzone: http://localhost:8761/eureka
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    service-url:
+#      defaultzone: http://localhost:8761/eureka
+
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  endpoint:
+    health:
+      show-details: always
+
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ratingHotelBreaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
